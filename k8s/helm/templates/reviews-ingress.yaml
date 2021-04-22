@@ -8,7 +8,7 @@ metadata:
   {{- end }}
   {{- end }}
   name: {{ .Release.Name }}
-  namespace: {{ .Values.details.namespace }}
+  namespace: {{ .Values.reviews.namespace }}
 spec:
   rules:
     - host: {{ .Values.ingress.host }}
@@ -18,4 +18,4 @@ spec:
           pathType: Prefix
           backend:
             serviceName: {{ .Release.Name }}
-            servicePort: {{ .Values.details.port }}
+            servicePort: {{ .Values.reviews.port }}
