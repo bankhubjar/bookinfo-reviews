@@ -1,17 +1,21 @@
-details:
+reviews:
   namespace: bank-bookinfo-prd
-  image: ghcr.io/bankhubjar/bookinfo-details
+  image: ghcr.io/bankhubjar/bookinfo-reviews
   tag: prd
   replicas: 1
   imagePullSecrets: registry-bookinfo
-  port: 8082
+  port: 9080
   healthCheckPath: "/health"
 ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/rewrite-target: /$2
   host: bookinfo.hellodolphin.in.th
-  path: "/bank/details(/|$)(.*)"
+  path: "/bank/reviews(/|$)(.*)"
   # host: bookinfo.opsta.net
-  # path: "/student108/details(/|$)(.*)"
+  # path: "/student108/reviews(/|$)(.*)"
   serviceType: ClusterIP
+# extraEnv:
+#   ENABLE_RATINGS: "true"
+#   RATINGS_SERVICE: "http://ratings:8080"
+#   STAR_COLOR: yellow

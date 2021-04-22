@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}
-  namespace: {{ .Values.details.namespace }}
+  namespace: {{ .Values.reviews.namespace }}
   labels:
     app: {{ .Release.Name }}
 spec:
-  replicas: {{ .Values.details.replicas }}
+  replicas: {{ .Values.reviews.replicas }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -17,21 +17,28 @@ spec:
     spec:
       containers:
       - name: {{ .Release.Name }}
-        image: {{ .Values.details.image }}:{{ .Values.details.tag }}
+        image: {{ .Values.reviews.image }}:{{ .Values.reviews.tag }}
         imagePullPolicy: Always
         ports:
-        - containerPort: {{ .Values.details.port }}
+        - containerPort: {{ .Values.reviews.port }}
           name: web-port
           protocol: TCP
         livenessProbe:
           httpGet:
-            path: {{ .Values.details.healthCheckPath }}
-            port: {{ .Values.details.port }}
+            path: {{ .Values.reviews.healthCheckPath }}
+            port: {{ .Values.reviews.port }}
             scheme: HTTP
         readinessProbe:
           httpGet:
-            path: {{ .Values.details.healthCheckPath }}
-            port: {{ .Values.details.port }}
+            path: {{ .Values.reviews.healthCheckPath }}
+            port: {{ .Values.reviews.port }}
             scheme: HTTP
+        {{- if .Values.extraEnv }}
+        env:
+        {{- range $key, $value := .Values.extraEnv }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
       imagePullSecrets:
-      - name: {{ .Values.details.imagePullSecrets }}
+      - name: {{ .Values.reviews.imagePullSecrets }}
