@@ -1,0 +1,96 @@
+// Define variables
+def scmVars
+
+// Start Pipeline
+pipeline {
+
+  // Configure Jenkins Slave
+  agent {
+    // Use Kubernetes as dynamic Jenkins Slave
+    kubernetes {
+      // Kubernetes Manifest File to spin up Pod to do build
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: docker:19.03.5-dind
+    command:
+    - dockerd
+    - --host=unix:///var/run/docker.sock
+    - --host=tcp://0.0.0.0:2375
+    - --storage-driver=overlay2
+    tty: true
+    securityContext:
+      privileged: true
+  - name: git
+    image: alpine/git:1.0.7
+    command:
+    - cat
+    tty: true
+"""
+    } // End kubernetes
+  } // End agent
+
+  // Start Pipeline
+  stages {
+
+    // ***** Stage Clone *****
+    stage('Clone ratings source code') {
+      // Steps to run build
+      steps {
+        // Run in Jenkins Slave container
+        container('jnlp') {
+          // Use script to run
+          script {
+            // Git clone repo and checkout branch as we put in parameter
+            scmVars = git branch: "master",
+                          credentialsId: 'Jenkins_deploykey',
+                          url: 'git@github.com:bankhubjar/bookinfo-ratings.git'
+          } // End script
+        } // End container
+      } // End steps
+    } // End stage
+
+    // ***** Stage Docker Tag *****
+    stage('Tag Docker Image') {
+      steps {
+        container('docker') {
+          script {
+            // Do docker login authentication
+            docker.withRegistry('https://ghcr.io', 'Github_Registry') {
+              // Pulling UAT Image
+              uatImage = docker.image("ghcr.io/bankhubjar/bookinfo-ratings:uat")
+              uatImage.pull()
+              // Push UAT Image back with build tag
+              uatImage.push("build-${BUILD_NUMBER}")
+            } // End docker.withRegistry
+          } // End script
+        } // End container
+      } // End steps
+    } // End stage
+    
+    // ***** Stage Git Tag *****
+    stage('Git tag') {
+      steps {
+        // Run on Git container
+        container('git') {
+          script {
+            // Use deploy key as private key to push code
+            sshagent(credentials: ['Jenkins_deploykey']) {
+              sh """
+                # Git tag first
+                git tag build-${BUILD_NUMBER}
+                # Push tag back to GitLab
+                SSH_AUTH_SOCK=${SSH_AUTH_SOCK} \
+                  GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" \
+                  git push --tags
+              """
+            } // End withKubeConfig
+          } // End script
+        } // End container
+      } // End steps
+    } // End stage
+  } // End stages
+} // End pipeline

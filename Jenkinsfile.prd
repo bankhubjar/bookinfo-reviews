@@ -1,0 +1,73 @@
+// Define variables
+def scmVars
+
+// Start Pipeline
+pipeline {
+
+  // Configure Jenkins Slave
+  agent {
+    // Use Kubernetes as dynamic Jenkins Slave
+    kubernetes {
+      // Kubernetes Manifest File to spin up Pod to do build
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: helm
+    image: lachlanevenson/k8s-helm:v3.0.2
+    command:
+    - cat
+    tty: true
+"""
+    } // End kubernetes
+  } // End agent
+
+  // Git Parameter Choices
+  parameters {
+    gitParameter name: 'TAG',
+                 selectedValue: 'TOP',
+                 sortMode: 'DESCENDING_SMART',
+                 tagFilter: 'build-*',
+                 type: 'PT_TAG'
+  }
+
+  // Start Pipeline
+  stages {
+
+    // ***** Stage Clone *****
+    stage('Clone ratings source code') {
+      // Steps to run build
+      steps {
+          // Use script to run
+          script {
+          scmVars = checkout([
+            $class: 'GitSCM',
+            branches: [[name: "refs/tags/${params.TAG}"]],
+            userRemoteConfigs: [[
+              credentialsId: 'Jenkins_deploykey',
+              url: 'git@github.com:bankhubjar/bookinfo-ratings.git'
+            ]]
+          ])
+        } // End script
+      } // End steps
+    } // End stage
+
+    // ***** Stage Deploy *****
+    stage('Deploy ratings with Helm Chart') {
+      steps {
+        container('helm') {
+          script {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              // Helm upgrade with set production tag
+              sh "helm upgrade -i -f k8s/helm-values/values-bookinfo-prd-ratings.yaml \
+                --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+                --set ratings.tag=${params.TAG} \
+                --namespace bank-bookinfo-prd bookinfo-prd-ratings k8s/helm"
+            }
+          }
+        }
+      }
+    }
+  } // End stages
+} // End pipeline
