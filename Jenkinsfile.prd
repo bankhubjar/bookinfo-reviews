@@ -36,7 +36,7 @@ spec:
   stages {
 
     // ***** Stage Clone *****
-    stage('Clone ratings source code') {
+    stage('Clone reviews source code') {
       // Steps to run build
       steps {
           // Use script to run
@@ -46,7 +46,7 @@ spec:
             branches: [[name: "refs/tags/${params.TAG}"]],
             userRemoteConfigs: [[
               credentialsId: 'Jenkins_deploykey',
-              url: 'git@github.com:bankhubjar/bookinfo-ratings.git'
+              url: 'git@github.com:bankhubjar/bookinfo-reviews.git'
             ]]
           ])
         } // End script
@@ -54,16 +54,16 @@ spec:
     } // End stage
 
     // ***** Stage Deploy *****
-    stage('Deploy ratings with Helm Chart') {
+    stage('Deploy reviews with Helm Chart') {
       steps {
         container('helm') {
           script {
             withKubeConfig([credentialsId: 'kubeconfig']) {
               // Helm upgrade with set production tag
-              sh "helm upgrade -i -f k8s/helm-values/values-bookinfo-prd-ratings.yaml \
+              sh "helm upgrade -i -f k8s/helm-values/values-bookinfo-prd-reviews.yaml \
                 --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
-                --set ratings.tag=${params.TAG} \
-                --namespace bank-bookinfo-prd bookinfo-prd-ratings k8s/helm"
+                --set reviews.tag=${params.TAG} \
+                --namespace bank-bookinfo-prd bookinfo-prd-reviews k8s/helm"
             }
           }
         }
