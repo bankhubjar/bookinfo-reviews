@@ -37,7 +37,7 @@ spec:
   stages {
 
     // ***** Stage Clone *****
-    stage('Clone ratings source code') {
+    stage('Clone reviews source code') {
       // Steps to run build
       steps {
         // Run in Jenkins Slave container
@@ -47,7 +47,7 @@ spec:
             // Git clone repo and checkout branch as we put in parameter
             scmVars = git branch: "master",
                           credentialsId: 'Jenkins_deploykey',
-                          url: 'git@github.com:bankhubjar/bookinfo-ratings.git'
+                          url: 'git@github.com:bankhubjar/bookinfo-reviews.git'
           } // End script
         } // End container
       } // End steps
@@ -61,7 +61,7 @@ spec:
             // Do docker login authentication
             docker.withRegistry('https://ghcr.io', 'Github_Registry') {
               // Pulling UAT Image
-              uatImage = docker.image("ghcr.io/bankhubjar/bookinfo-ratings:uat")
+              uatImage = docker.image("ghcr.io/bankhubjar/bookinfo-reviews:uat")
               uatImage.pull()
               // Push UAT Image back with build tag
               uatImage.push("build-${BUILD_NUMBER}")
