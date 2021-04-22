@@ -16,7 +16,7 @@ ingress:
   # path: "/student108/reviews(/|$)(.*)"
   serviceType: ClusterIP
 extraEnv:
-  RATINGS_SERVICE: "http://ratings:8081"
+  RATINGS_SERVICE: http://bookinfo-prd-ratings:8081
   SERVICE_VERSION: v1
   ENABLE_RATINGS: "true"
   STAR_COLOR: green

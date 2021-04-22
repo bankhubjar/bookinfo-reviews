@@ -105,7 +105,6 @@ spec:
             container('java'){
                 script {
                     sh "gradle build"
-                    sh "ls -la"
                     // Authentiocation with http://sonarqube.hellodolphin.in.th
                     withSonarQubeEnv('sonarqube-scanner') {
                         // Run Sonar Scanner
