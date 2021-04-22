@@ -35,7 +35,7 @@ spec:
     - cat
     tty: true
   - name: java
-    image: gradle:6.0.1-jdk11
+    image: gradle:jdk11
     command:
     - cat
     tty: true   
@@ -104,6 +104,8 @@ spec:
         steps {
             container('java'){
                 script {
+                    sh "gradle build"
+                    sh "ls -la"
                     // Authentiocation with http://sonarqube.hellodolphin.in.th
                     withSonarQubeEnv('sonarqube-scanner') {
                         // Run Sonar Scanner
@@ -112,7 +114,7 @@ spec:
                         -D sonar.projectName=${PROJECT_NAME} \
                         -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
                         -D sonar.sources=./src \
-                        -D sonar.java.binaries=./bin
+                        -D sonar.java.binaries=./build/classes
                         '''
                     } // End withSonarQubeEnv
 
@@ -192,7 +194,5 @@ spec:
         } // End container
       } // End steps
     } // End stage
-
-
   } // End stages
 } // End pipeline

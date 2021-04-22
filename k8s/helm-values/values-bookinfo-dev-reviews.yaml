@@ -4,7 +4,7 @@ reviews:
   tag: dev
   replicas: 1
   imagePullSecrets: registry-bookinfo
-  port: 8082
+  port: 9080
   healthCheckPath: "/health"
 ingress:
   annotations:
@@ -15,7 +15,8 @@ ingress:
   # host: bookinfo.dev.opsta.net
   # path: "/student108/reviews(/|$)(.*)"
   serviceType: ClusterIP
-# extraEnv:
-#   ENABLE_RATINGS: "true"
-#   RATINGS_SERVICE: "http://ratings:8080"
-#   STAR_COLOR: yellow
+extraEnv:
+  RATINGS_SERVICE: "http://ratings:8081"
+  SERVICE_VERSION: v1
+  ENABLE_RATINGS: "true"
+  STAR_COLOR: red
